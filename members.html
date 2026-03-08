@@ -35,7 +35,7 @@ button:hover{background:#4752C4;}
 <li><a href="start.html">Startseite</a></li>
 <li><a href="index.html">Team</a></li>
 <li><a href="members.html">Members</a></li>
-<li><a href="https://discord.gg/59xGwzwv">Discord</a></li>
+<li><a href="regel.html">Regel</a></li>
 </ul>
 </nav>
 
@@ -166,33 +166,174 @@ function deleteMember(i){
     }
 }
 
+</script>
+
+<script>
+function joinMeeting() {
+    // Benutzername abfragen
+    const username = prompt("Gib deinen Benutzernamen ein:");
+
+    // Suche das Mitglied in der Liste (case-insensitive)
+    const user = members.find(m => m.name.toLowerCase() === username.toLowerCase());
+
+    if (!user) {
+        alert("Du bist nicht in der Memberliste!");
+        return;
+    }
+
+    // Teammeeting-Zugriff prüfen
+    // Admins dürfen immer rein, andere Rollen außer 'member' ebenfalls
+    if (user.role.toLowerCase() === "member" && user.role.toLowerCase() !== "admin") {
+        alert("Members dürfen nicht ins Teammeeting!");
+        return;
+    }
+
+    // Meeting anzeigen
+    const meetingDiv = document.getElementById("meeting");
+    meetingDiv.style.display = "block";
+    meetingDiv.scrollIntoView({ behavior: "smooth" });
+}
+</script>
+
+<script>
 // === Teammeeting mit Jitsi ===
 let api = null;
-function joinMeeting(){
-    if(!currentUser){ alert("Bitte zuerst einloggen!"); return; }
-    if(currentUser.role === "member"){ alert("Members dürfen nicht ins Teammeeting!"); return; }
-    if(api) return; // schon beigetreten
 
-    document.getElementById("meeting").innerHTML = ""; // reset
+function joinMeeting(){
+
+    if(!currentUser){
+        alert("Bitte zuerst einloggen!");
+        return;
+    }
+
+    // Member dürfen nicht ins Meeting
+    if(currentUser.role.toLowerCase() === "member"){
+        alert("Members dürfen nicht ins Teammeeting!");
+        return;
+    }
+
+    // Wenn Meeting schon offen ist
+    if(api) return;
+
+    const meetingDiv = document.getElementById("meeting");
+    meetingDiv.style.display = "block";
+    meetingDiv.innerHTML = "";
+
     const domain = "meet.jit.si";
+
     const options = {
         roomName: "LudwigshafenRPTeammeeting",
-        parentNode: document.getElementById('meeting'),
+        parentNode: meetingDiv,
         width: "100%",
         height: 500,
-        userInfo: {displayName: currentUser.name},
-        configOverwrite: { prejoinPageEnabled: false },
-        interfaceConfigOverwrite: {
-            filmStripOnly: false,
-            SHOW_JITSI_WATERMARK: false,
-            TOOLBAR_BUTTONS: [
-                'microphone','camera','desktop','raisehand','tileview','chat','hangup'
-            ]
+        userInfo: {
+            displayName: currentUser.name
+        },
+        configOverwrite: {
+            prejoinPageEnabled: false
         }
     };
+
     api = new JitsiMeetExternalAPI(domain, options);
 }
-showMembers();
+</script>
+
+<script src="https://meet.jit.si/external_api.js"></script>
+
+<script src="https://meet.jit.si/external_api.js"></script>
+
+<script>
+HIER DER CODE
+</script>
+
+<div id="meeting"></div>
+
+<h2>Teamchat</h2>
+
+<div id="chatBox"></div>
+
+<input type="text" id="chatInput" placeholder="Nachricht schreiben...">
+<button onclick="sendMessage()">Senden</button>
+
+<style>
+#chatBox{
+width:100%;
+max-width:900px;
+height:250px;
+background:#2b2b2b;
+border-radius:8px;
+margin:10px auto;
+padding:10px;
+overflow-y:auto;
+text-align:left;
+}
+
+.message{
+margin-bottom:5px;
+}
+
+.username{
+font-weight:bold;
+}
+</style>
+
+<script>
+
+let messages = [];
+
+function sendMessage(){
+
+    if(!currentUser){
+        alert("Du musst eingeloggt sein!");
+        return;
+    }
+
+    const input = document.getElementById("chatInput");
+    const text = input.value.trim();
+
+    if(text === "") return;
+
+    const message = {
+        user: currentUser.name,
+        role: currentUser.role,
+        text: text
+    };
+
+    messages.push(message);
+    input.value = "";
+
+    updateChat();
+}
+
+function updateChat(){
+
+    const chatBox = document.getElementById("chatBox");
+    chatBox.innerHTML = "";
+
+    messages.forEach(msg => {
+
+        const div = document.createElement("div");
+        div.className = "message";
+
+        let color = "white";
+
+        if(msg.role.toLowerCase() === "admin"){
+            color = "red";
+        }
+
+        div.innerHTML =
+        "<span class='username' style='color:"+color+"'>" +
+        msg.user +
+        ":</span> " +
+        msg.text;
+
+        chatBox.appendChild(div);
+
+    });
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
 </script>
 
 </body>
